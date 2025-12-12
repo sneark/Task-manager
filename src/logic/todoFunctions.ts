@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from 'uuid';
 import { pipe } from './utils';
 import { Maybe } from './monads';
 
@@ -15,37 +14,39 @@ export interface Task {
 export type FilterType = 'all' | 'active' | 'completed';
 export type SortType = 'date' | 'priority';
 
-export const createTask = (title: string, priority: Priority = 'medium'): Task => {
+
+export const createTask = (id: string, createdAt: number, title: string, priority: Priority = 'medium'): Task => {
   return {
-    id: uuidv4(),
+    id,
     title,
     completed: false,
     priority,
-    createdAt: Date.now(),
+    createdAt,
   };
 };
 
-export const addTask = (tasks: Task[], newTask: Task): Task[] => {
+
+export const addTask = (newTask: Task) => (tasks: Task[]): Task[] => {
   return [...tasks, newTask];
 };
 
-export const toggleTask = (tasks: Task[], id: string): Task[] => {
+export const toggleTask = (id: string) => (tasks: Task[]): Task[] => {
   return tasks.map((task) =>
     task.id === id ? { ...task, completed: !task.completed } : task
   );
 };
 
-export const deleteTask = (tasks: Task[], id: string): Task[] => {
+export const deleteTask = (id: string) => (tasks: Task[]): Task[] => {
   return tasks.filter((task) => task.id !== id);
 };
 
-export const updateTaskTitle = (tasks: Task[], id: string, newTitle: string): Task[] => {
+export const updateTaskTitle = (id: string, newTitle: string) => (tasks: Task[]): Task[] => {
   return tasks.map((task) =>
     task.id === id ? { ...task, title: newTitle } : task
   );
 };
 
-export const updateTaskPriority = (tasks: Task[], id: string, priority: Priority): Task[] => {
+export const updateTaskPriority = (id: string, priority: Priority) => (tasks: Task[]): Task[] => {
   return tasks.map((task) =>
     task.id === id ? { ...task, priority } : task
   );
@@ -55,7 +56,7 @@ export const clearCompleted = (tasks: Task[]): Task[] => {
   return tasks.filter((task) => !task.completed);
 };
 
-export const findTask = (tasks: Task[], id: string): Maybe<Task> => {
+export const findTask = (id: string) => (tasks: Task[]): Maybe<Task> => {
   const task = tasks.find(t => t.id === id);
   return Maybe.fromNullable(task);
 };
@@ -96,5 +97,5 @@ export const processTasks = (tasks: Task[], filter: FilterType, sort: SortType):
   )(tasks);
 };
 
-export const filterTasks = (tasks: Task[], filter: FilterType): Task[] => filterBy(filter)(tasks);
-export const sortTasks = (tasks: Task[], sort: SortType): Task[] => sortBy(sort)(tasks);
+export const filterTasks = filterBy;
+export const sortTasks = sortBy;

@@ -1,38 +1,49 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Task, Priority } from '../logic/todoFunctions';
 
 interface TaskListProps {
     tasks: Task[];
+    editingId: string | null;
     onToggle: (id: string) => void;
     onDelete: (id: string) => void;
-    onUpdateTitle: (id: string, newTitle: string) => void;
     onUpdatePriority: (id: string, priority: Priority) => void;
+    onEditStart: (id: string) => void;
+    onEditCancel: () => void;
+    onEditSave: (id: string, newTitle: string) => void;
 }
 
 export const TaskList: React.FC<TaskListProps> = ({
     tasks,
+    editingId,
     onToggle,
     onDelete,
-    onUpdateTitle,
-    onUpdatePriority
+    onUpdatePriority,
+    onEditStart,
+    onEditCancel,
+    onEditSave
 }) => {
-    const [editingId, setEditingId] = useState<string | null>(null);
-    const [editValue, setEditValue] = useState('');
+    const [tempValue, setTempValue] = useState('');
+
+
+    useEffect(() => {
+        if (editingId) {
+            const task = tasks.find(t => t.id === editingId);
+            if (task) {
+                setTempValue(task.title);
+            }
+        }
+    }, [editingId, tasks]);
 
     if (tasks.length === 0) {
         return <div className="empty-state">Brak zadań.</div>;
     }
 
-    const startEditing = (task: Task) => {
-        setEditingId(task.id);
-        setEditValue(task.title);
-    };
-
-    const saveEdit = (id: string) => {
-        if (editValue.trim()) {
-            onUpdateTitle(id, editValue.trim());
+    const handleKeyDown = (e: React.KeyboardEvent, id: string) => {
+        if (e.key === 'Enter') {
+            onEditSave(id, tempValue);
+        } else if (e.key === 'Escape') {
+            onEditCancel();
         }
-        setEditingId(null);
     };
 
     const priorityColors: Record<Priority, string> = {
@@ -64,10 +75,10 @@ export const TaskList: React.FC<TaskListProps> = ({
                         {editingId === task.id ? (
                             <input
                                 type="text"
-                                value={editValue}
-                                onChange={(e) => setEditValue(e.target.value)}
-                                onBlur={() => saveEdit(task.id)}
-                                onKeyDown={(e) => e.key === 'Enter' && saveEdit(task.id)}
+                                value={tempValue}
+                                onChange={(e) => setTempValue(e.target.value)}
+                                onBlur={() => onEditSave(task.id, tempValue)}
+                                onKeyDown={(e) => handleKeyDown(e, task.id)}
                                 className="edit-input"
                                 autoFocus
                             />
@@ -75,7 +86,7 @@ export const TaskList: React.FC<TaskListProps> = ({
                             <span
                                 className="task-title"
                                 onClick={() => onToggle(task.id)}
-                                onDoubleClick={() => startEditing(task)}
+                                onDoubleClick={() => onEditStart(task.id)}
                                 title="Kliknij dwukrotnie, aby edytować"
                             >
                                 {task.title}

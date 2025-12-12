@@ -31,9 +31,6 @@ export class Just<T> extends Maybe<T> {
         this._value = value;
     }
 
-    get value(): T {
-        return this._value;
-    }
 
     map<U>(f: (value: T) => U): Maybe<U> {
         return Maybe.fromNullable(f(this._value));
@@ -71,10 +68,6 @@ export class Nothing<T> extends Maybe<T> {
 
     chain<U>(_f: (value: T) => Maybe<U>): Maybe<U> {
         return new Nothing<U>();
-    }
-
-    get value(): never {
-        throw new TypeError("Nie można pobrać wartości z Nothing!");
     }
 
     getOrElse(other: T): T {
